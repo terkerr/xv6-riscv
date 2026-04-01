@@ -178,3 +178,18 @@ filewrite(struct file *f, uint64 addr, int n)
   return ret;
 }
 
+uint64
+cntOpeningFile(void)
+{
+  uint64 cnt = 0;
+
+  acquire(&ftable.lock);
+  for (int i = 0; i < NFILE; i++) {
+    if (ftable.file[i].ref > 0) {
+      cnt++;
+    }
+  }
+  release(&ftable.lock);
+
+  return cnt;
+}
