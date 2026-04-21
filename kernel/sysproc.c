@@ -135,3 +135,34 @@ sys_sysinfo(void)
 
   return 0;
 }
+
+uint64
+sys_pgaccess(void)
+{
+  uint64 va;
+  int n;
+  uint64 mask_addr;
+  argaddr(0, &va);
+  argint(1, &n);
+  argaddr(2, &mask_addr);
+
+  if (n > 64) {
+    return -1;
+  }
+
+  uint64 mask = 0;
+
+  for (int i = 0; i < n; i++) {
+    pte_t *pte = walk(myproc()->pagetable, va + i * PGSIZE, 0);
+    if (pte != 0 && (*pte & PTE_V) && (*pte & PTE_A)) {
+      mask |= ((uint64)1 << i);
+      *pte &= ~PTE_A;
+    }
+  }
+
+  if (copyout(myproc()->pagetable, mask_addr, (char *)&mask, sizeof(mask)) < 0) {
+    return -1;
+  }
+
+  return 0;
+}

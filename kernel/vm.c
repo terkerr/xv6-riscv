@@ -484,3 +484,27 @@ ismapped(pagetable_t pagetable, uint64 va)
   }
   return 0;
 }
+
+void
+vmprint_recursive(pagetable_t ptb, int lvl)
+{
+  for (int i = 0; i < 512; i++) {
+    pte_t pte = ptb[i];
+    if (pte & PTE_V) {
+      for (int j = 0; j <= lvl; j++) {
+        printf(" ..");
+      }
+      printf("%d: pte %p pa %p\n", i, (void *)pte, (void *)PTE2PA(pte));
+      if ((pte & PTE_V) && (pte & (PTE_R | PTE_W | PTE_X)) == 0) {
+        vmprint_recursive((pagetable_t)PTE2PA(pte), lvl + 1);
+      }
+    }
+  }
+}
+
+void
+vmprint(pagetable_t pagetable)
+{
+  printf("page table %p\n", pagetable);
+  vmprint_recursive(pagetable, 0);
+}
